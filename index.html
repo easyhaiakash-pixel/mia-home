@@ -19,7 +19,33 @@
 <div id="choice" class="ui"></div>
 <div id="phone" class="ui"></div>
 <div id="fade" class="ui"></div>
+<button class="ui btn gl-open" id="gl-open">🎁 Gift Mia</button>
+<div class="ui sheet giftlink" id="giftlink" role="dialog" aria-modal="true" aria-labelledby="gl-title" hidden>
+  <button class="x" data-close aria-label="Close">✕</button>
+  <h2 id="gl-title">🎁 Mia's birthday wardrobe</h2>
+  <p class="small">Mia's birthday is in 3 days and she has no dress 😢 Buy what you love through these links, for yourself or someone you love. It supports us, and we give Mia the same thing in her home and in the next parts 💗</p>
+  <div class="mw-tabs"><button class="mw-tab on" data-pane="mw-shop">👗 Her wish list</button><button class="mw-tab" data-pane="mw-paste">🔗 Paste any link</button></div>
+  <div class="mw-pane" id="mw-shop"><div id="mw-list"></div></div>
+  <div class="mw-pane" id="mw-paste" hidden>
+    <p class="small">Found something else on Amazon? Paste the link and buy through Mia's link.</p>
+    <div class="gl-row">
+      <input id="gl-in" type="url" inputmode="url" placeholder="Paste an amazon.com or amazon.in link" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="gl-paste" id="gl-paste" aria-label="Paste">📋</button>
+    </div>
+    <button class="gl-go" id="gl-go">Get Mia's link 💝</button>
+    <p class="gl-err" id="gl-err" hidden></p>
+    <div class="gl-out" id="gl-out" hidden>
+      <div class="gl-flag" id="gl-flag"></div>
+      <div class="gl-url" id="gl-url"></div>
+      <div class="gl-btns"><a class="gl-buy" id="gl-buy" href="#" target="_blank" rel="noopener sponsored">🛒 Buy on Amazon</a><button class="gl-copy" id="gl-copy">📋 Copy link</button></div>
+    </div>
+  </div>
+  <div class="gl-shop"><span>Or shop anything:</span><a href="https://www.amazon.com/?tag=onelifegifts-20" target="_blank" rel="noopener sponsored">🇺🇸 amazon.com</a><a href="https://www.amazon.in/?tag=onelifegifts-21" target="_blank" rel="noopener sponsored">🇮🇳 amazon.in</a></div>
+  <p class="disclosure">As an Amazon Associate I earn from qualifying purchases.</p>
+</div>
 <div id="loading" class="ui"><h1>Mia's World</h1><div class="mia">🎀</div><div id="bar"><i></i></div><p id="lmsg">Loading her tiny home…</p><button class="btn" id="start">Step inside 💗</button></div>
+<script src="TemplateData/mia-gifts.js"></script>
+<script type="module">import { initGiftLink } from './TemplateData/giftlink.js'; initGiftLink();</script>
 <script src="TemplateData/mia-ui.js"></script>
 <script src="Build/WebGL.loader.js"></script>
 <script>

@@ -50,3 +50,34 @@
   @keyframes rip { from { transform: scale(.3); opacity: .9; } to { transform: scale(1.4); opacity: 0; } }
   #loading .mia { font-size: 90px; animation: bob 1.4s ease-in-out infinite; }
   @keyframes bob { 50% { transform: translateY(-10px); } }
+
+  /* ---------- 🎁 Gift Mia panel (TemplateData/mia-gifts.js + giftlink.js) ---------- */
+  .gl-open { top: calc(max(12px, env(safe-area-inset-top)) + 58px); right: 12px; background: linear-gradient(#ffb3c8, #ff8fb4); color: #fff; font-family: Lilita, sans-serif; font-size: 17px; -webkit-text-stroke: 3px var(--ol); paint-order: stroke fill; animation: bob 2.4s ease-in-out infinite; }
+  .sheet { left: 50%; bottom: max(10px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(460px, calc(100% - 16px)); max-height: 82vh; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; -webkit-user-select: text; user-select: text; background: var(--cream); border: 3.5px solid var(--ol); border-radius: 26px; box-shadow: 0 8px 0 rgba(107,64,70,.3), 0 20px 40px rgba(43,34,48,.35); padding: 16px 16px 12px; z-index: 25; }
+  .sheet[hidden], .mw-pane[hidden], .gl-err[hidden], .gl-out[hidden] { display: none; }
+  .sheet .x { position: absolute; right: 10px; top: 10px; width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--ol); background: #fff; color: var(--ol); font-size: 16px; cursor: pointer; }
+  .sheet h2 { font-family: Lilita, sans-serif; font-weight: normal; font-size: 23px; margin: 2px 40px 6px 0; }
+  .sheet .small { font-size: 13.5px; line-height: 1.35; margin: 0 0 10px; }
+  .mw-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .mw-tab { flex: 1; border: 3px solid var(--ol); border-radius: 16px; background: #fff; color: var(--ol); padding: 8px 4px; font: 15px Lilita, sans-serif; cursor: pointer; }
+  .mw-tab.on { background: #ffd6e0; }
+  .mw-row { display: flex; align-items: center; gap: 6px; background: #fff; border: 2.5px solid var(--ol); border-radius: 16px; padding: 6px 8px; margin-bottom: 6px; }
+  .mw-e { font-size: 24px; width: 32px; text-align: center; }
+  .mw-n { flex: 1; font-size: 14.5px; font-weight: bold; min-width: 0; }
+  .mw-b { flex: none; text-decoration: none; border: 2.5px solid var(--ol); border-radius: 12px; padding: 5px 8px; font: 13px Lilita, sans-serif; color: #fff; -webkit-text-stroke: 2.5px var(--ol); paint-order: stroke fill; }
+  .mw-b.us { background: #8cc7ff; } .mw-b.in { background: #ffb37a; }
+  .gl-row { display: flex; gap: 6px; }
+  .gl-row input { flex: 1; min-width: 0; font-size: 16px; padding: 11px 12px; border: 3px solid var(--ol); border-radius: 16px; background: #fff; color: var(--ol); outline: none; }
+  .gl-paste { width: 48px; flex: none; border: 3px solid var(--ol); border-radius: 16px; background: #fff; font-size: 20px; cursor: pointer; }
+  .gl-go { display: block; width: 100%; margin: 8px 0 0; border: 3px solid var(--ol); border-radius: 18px; background: #ff6f9e; color: #fff; padding: 11px; font: 19px Lilita, sans-serif; -webkit-text-stroke: 3px var(--ol); paint-order: stroke fill; box-shadow: 0 4px 0 rgba(107,64,70,.25); cursor: pointer; }
+  .gl-err { margin: 8px 2px 0; padding: 8px 10px; border-radius: 12px; background: #fff0f0; border: 2px dashed #e0334f; font-size: 13px; }
+  .gl-out { margin-top: 10px; padding: 10px; border: 3px solid var(--ol); border-radius: 18px; background: linear-gradient(#fff6d6, #ffe7a3); }
+  .gl-flag { font: 14px Lilita, sans-serif; margin-bottom: 4px; }
+  .gl-url { font-size: 12px; word-break: break-all; background: #fff; border-radius: 10px; padding: 6px 8px; border: 2px solid rgba(107,64,70,.35); }
+  .gl-btns { display: flex; gap: 6px; margin-top: 8px; }
+  .gl-buy, .gl-copy { flex: 1; text-align: center; text-decoration: none; border: 3px solid var(--ol); border-radius: 16px; padding: 9px 6px; font: 15px Lilita, sans-serif; cursor: pointer; }
+  .gl-buy { background: #8cc7ff; color: #fff; -webkit-text-stroke: 3px var(--ol); paint-order: stroke fill; }
+  .gl-copy { background: #fff; color: var(--ol); }
+  .gl-shop { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; font-size: 13px; }
+  .gl-shop a { color: var(--ol); text-decoration: none; border: 2.5px solid var(--ol); border-radius: 12px; padding: 4px 9px; background: #fff; font: 13px Lilita, sans-serif; }
+  .disclosure { margin: 8px 2px 0; font-size: 11px; opacity: .7; text-align: center; }
