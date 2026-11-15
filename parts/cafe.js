@@ -174,7 +174,7 @@ export function buildCafe({ scene, statics: st }) {
   // tip jar (prop)
   const tip = G(-1.05, 1.06, fz + 0.2); tip.name = 'tipJar';
   const tg = new THREE.Mesh(lathe([[0.001, 0], [0.06, 0], [0.065, 0.01], [0.065, 0.15], [0.055, 0.17], [0.001, 0.17]], 20), new THREE.MeshToonMaterial({ color: '#e6f6ff', transparent: true, opacity: 0.35, depthWrite: false })); tip.add(tg); addOutline(tg);
-  const tipCash = M(new THREE.CylinderGeometry(0.055, 0.058, 1, 18), toon('#cdeccf'), 0, 0.01, 0); tip.add(tipCash);
+  const tipCash = M(new THREE.CylinderGeometry(0.055, 0.058, 1, 18), toon('#cdeccf'), 0, 0.01, 0); tip.add(tipCash); tipCash.name = 'tipCash';
   const tl = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.055), basic({ map: tipTex() })); tl.position.set(0, 0.1, 0.066); tip.add(tl);
   fc.add(tip); objects.tipJar = tip;
   // croissants on a plate + flowers
@@ -223,14 +223,14 @@ export function buildCafe({ scene, statics: st }) {
   const nap = G(AX - 0.05, 0.782, AZ + 0.08, -0.6); nap.name = 'napkinNote';
   const napMat = toon('#ffffff', { map: napkinTex() });
   const napBase = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.15), napMat); napBase.rotation.x = -Math.PI / 2; nap.add(napBase);
-  const hinge = G(0, 0.002, -0.075); nap.add(hinge);
+  const hinge = G(0, 0.002, -0.075); hinge.name = 'napHinge'; nap.add(hinge);
   const napFlap = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.15), toon('#fffdf6', { side: THREE.DoubleSide })); napFlap.rotation.x = -Math.PI / 2; napFlap.position.z = 0.075; hinge.add(napFlap);
-  const napNote = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.15), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true })); napNote.rotation.x = -Math.PI / 2; napNote.position.y = 0.0015; napNote.name = 'napkinNoteScreen'; nap.add(napNote);
+  const napNote = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.15), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true })); napNote.name = 'napNoteText'; napNote.rotation.x = -Math.PI / 2; napNote.position.y = 0.0015; napNote.name = 'napkinNoteScreen'; nap.add(napNote);
   scene.add(nap); objects.napkinNote = nap; objects.napkinNoteScreen = napNote;
   // the cup (black coffee on a saucer; lifts up)
   const cup = G(AX - 0.05, 0.782, AZ + 0.08); cup.name = 'adrianCup';
   const saucer = M(lathe([[0.001, 0], [0.07, 0], [0.085, 0.012], [0.08, 0.016], [0.001, 0.008]], 24), toon('#ffffff')); cup.add(saucer); addOutline(saucer);
-  const cupG = G(0, 0.012, 0); cup.add(cupG);
+  const cupG = G(0, 0.012, 0); cupG.name = 'cupLift'; cup.add(cupG);
   const cupBody = M(lathe([[0.001, 0], [0.03, 0], [0.045, 0.02], [0.048, 0.07], [0.044, 0.07], [0.042, 0.03], [0.001, 0.025]], 24), toon('#ffffff')); cupG.add(cupBody); addOutline(cupBody);
   cupG.add(M(new THREE.CircleGeometry(0.043, 22), toon('#3b2420'), 0, 0.062, 0, -Math.PI / 2, 0, 0));
   const cupH = M(new THREE.TorusGeometry(0.022, 0.006, 6, 14, Math.PI * 1.3), toon('#ffffff'), 0.05, 0.04, 0, 0, 0, -Math.PI * 0.65); cupG.add(cupH);
@@ -240,7 +240,7 @@ export function buildCafe({ scene, statics: st }) {
   const cash = G(AX + 0.03, 0.785, AZ + 0.24, -0.6); cash.name = 'cashStack';
   const billGeo = new THREE.BoxGeometry(0.156, 0.0012, 0.068); const billMat = toon('#ffffff', { map: billTex() });
   const bills = [];
-  for (let i = 0; i < 10; i++) { const b = new THREE.Mesh(billGeo, billMat); b.castShadow = true; cash.add(b); bills.push(b); }
+  for (let i = 0; i < 10; i++) { const b = new THREE.Mesh(billGeo, billMat); b.castShadow = true; b.name = 'bill' + i; cash.add(b); bills.push(b); }
   scene.add(cash); objects.cashStack = cash;
   // little spots of sun on his table? no: real shadows from the window do that.
 
@@ -265,7 +265,7 @@ export function buildCafe({ scene, statics: st }) {
   const road = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 40), toon('#ffffff', { map: roadTex() })); road.rotation.x = -Math.PI / 2; road.position.set(X1 + 4.9, -0.03, -2); road.receiveShadow = true; out.add(road);
   const side2 = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 40), toon('#ffffff', { map: paveTex() })); side2.rotation.x = -Math.PI / 2; side2.position.set(X1 + 8.4, -0.01, -2); out.add(side2);
   out.add(M(rbox(0.16, 0.12, 40, 0.03), toon('#e9d6d0'), X1 + 2.6, 0.02, -2));
-  const facade = new THREE.Mesh(new THREE.PlaneGeometry(40, 9), basic({ map: facadeTex(false), color: '#d9d2e6' })); facade.position.set(X1 + 9.6, 4.0, -2); facade.rotation.y = -Math.PI / 2; out.add(facade);
+  const facade = new THREE.Mesh(new THREE.PlaneGeometry(40, 9), basic({ map: facadeTex(false), color: '#d9d2e6' })); facade.name = 'facade'; facade.position.set(X1 + 9.6, 4.0, -2); facade.rotation.y = -Math.PI / 2; out.add(facade);
   for (let i = 0; i < 6; i++) {
     const z = -10.9 + i * 4.2;
     const tr = G(X1 + 2.2, 0, z); tr.add(M(capsule(0.06, 1.6, 4, 8), toon('#c98f6a'), 0, 0.85, 0));
@@ -290,7 +290,7 @@ export function buildCafe({ scene, statics: st }) {
   car.add(M(rbox(1.2, 0.08, 0.06, 0.03), chrome, 0, 0.42, -2.1));
   { const ms = []; car.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') ms.push(o); }); ms.forEach(o => addOutline(o)); }
   scene.add(car); objects.blackCar = car;
-  const carShadow = blobAt(2.4, 4.8, 0.7, X1 + 5.9, 0); scene.add(carShadow);
+  const carShadow = blobAt(2.4, 4.8, 0.7, X1 + 5.9, 0); carShadow.name = 'carShadow'; carShadow.userData.noMerge = true; scene.add(carShadow);
 
   // ---------- lights ----------
   const hemi = new THREE.HemisphereLight('#fff4ee', '#f7d2c6', 1.8); scene.add(hemi);

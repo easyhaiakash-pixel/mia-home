@@ -1,1 +1,37 @@
-<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=viewer.html"><script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script><script defer src="/_vercel/insights/script.js"></script><title>Mia's sets</title><a href="viewer.html">Open the viewer</a>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Mia's World · Her Story, Your Choice</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffd6e0">
+<meta name="description" content="Step into Mia's tiny home and the café where she works. Walk, sit, talk, and choose what she does.">
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script><script defer src="/_vercel/insights/script.js"></script>
+<link rel="stylesheet" href="TemplateData/mia.css">
+</head>
+<body>
+<canvas id="unity-canvas" tabindex="-1"></canvas>
+<div id="hud" class="ui"><div class="chip" id="place">🏠 <b>Home</b></div><div class="chip money">💵 <b id="money">$12.43</b></div><div class="chip rent">📅 Rent due: <b id="rent">3 days</b></div></div>
+<div id="tools" class="ui"><button class="btn" id="bMood" title="Day / night">🌙</button><button class="btn" id="bHelp" title="Help">❓</button></div>
+<div id="bubble"></div>
+<div id="menu"></div>
+<div id="tip"></div>
+<div id="ripple"></div>
+<div id="hint" class="ui">Tap the floor to walk · tap things to use them · drag to look around</div>
+<div id="choice" class="ui"></div>
+<div id="phone" class="ui"></div>
+<div id="fade" class="ui"></div>
+<div id="loading" class="ui"><h1>Mia's World</h1><div class="mia">🎀</div><div id="bar"><i></i></div><p id="lmsg">Loading her tiny home…</p><button class="btn" id="start">Step inside 💗</button></div>
+<script src="TemplateData/mia-ui.js"></script>
+<script src="Build/WebGL.loader.js"></script>
+<script>
+  createUnityInstance(document.getElementById('unity-canvas'), {
+    dataUrl: "Build/WebGL.data.unityweb",
+    frameworkUrl: "Build/WebGL.framework.js.unityweb",
+    codeUrl: "Build/WebGL.wasm.unityweb",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "Aakash Kumar",
+    productName: "Mia's World",
+    productVersion: "1.0",
+    devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
+  }, p => MiaUI.progress(p)).then(u => MiaUI.attach(u)).catch(e => MiaUI.error(e));
+</script>
+</body></html>

@@ -135,7 +135,7 @@ export function buildStudio({ scene, statics: st }) {
     }
     const lf = new THREE.Mesh(leafGeo(0.05), toon('#c8a46a')); lf.position.y = 0.05; lf.rotation.set(0.3, 0, 0.6); parent.add(lf); addOutline(lf);
     const lf2 = new THREE.Mesh(leafGeo(0.035), toon('#b8935a')); lf2.position.y = 0.02; lf2.rotation.set(-0.3, 1.2, -0.8); segs[1].add(lf2);
-    stems.push({ root, segs, dir: i === 1 ? 1 : (i - 1) });
+    root.name = 'stem' + i; segs.forEach((sg, k) => sg.name = 'stem' + i + '_' + k); stems.push({ root, segs, dir: i === 1 ? 1 : (i - 1) });
   }
   scene.add(plant); objects.deadPlant = plant;
   // fallen dry leaves on the sill
@@ -184,7 +184,7 @@ export function buildStudio({ scene, statics: st }) {
   const shadeGeo = lathe([[0.04, 0.2], [0.06, 0.205], [0.11, 0.3], [0.12, 0.32], [0.09, 0.355], [0.04, 0.37], [0.001, 0.372]], 24);
   const shadeMat = toon('#ffd6e3', { emissive: '#ffb37a', ei: 0 }); const shade = M(shadeGeo, shadeMat); lamp.add(shade); addOutline(shade);
   const lampLight = new THREE.PointLight('#ffb36b', 0, 4.5, 1.4); lampLight.position.set(0, 0.25, 0.12); lamp.add(lampLight);
-  const lampGlow = glow('#ffd9b8', 0.2, 0.15); lampGlow.position.set(0, 0.27, 0.05); lamp.add(lampGlow);
+  const lampGlow = glow('#ffd9b8', 0.2, 0.15); lampGlow.name = 'lampGlow'; lampGlow.position.set(0, 0.27, 0.05); lamp.add(lampGlow);
   scene.add(lamp); objects.bedLamp = lamp;
   st.add(M(mug('#9fd3c7').children[0].geometry, toon('#9fd3c7'), cx - 0.1, 0.44, cz + 0.05));
 
@@ -315,7 +315,7 @@ export function buildStudio({ scene, statics: st }) {
   st.add(M(rbox(0.08, 0.07, dw + 0.12, 0.02), fr, X1 - 0.02, dh + 0.02, dcz));
   // rent notice taped on the door (texture changes by props.rentNotice)
   const rn = G(X1 - 0.075, 1.42, dcz - 0.06, -Math.PI / 2); rn.name = 'rentNotice';
-  const rnPaper = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.39, 4, 4), toon('#ffffff', { map: rentTex('3 DAYS') }));
+  const rnPaper = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.39, 4, 4), toon('#ffffff', { map: rentTex('3 DAYS') })); rnPaper.name = 'rentPaper';
   { const p = rnPaper.geometry.getAttribute('position'); for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); p.setZ(i, 0.006 * (1 + Math.sin((y + 0.2) * 9)) * (x / 0.15) ** 2 + Math.max(0, -0.15 - y) * 0.15); } rnPaper.geometry.computeVertexNormals(); }
   rnPaper.rotation.z = 0.04; rn.add(rnPaper);
   [[-0.13, 0.18, 0.5], [0.13, 0.18, -0.5]].forEach(([x, y, r]) => { const tp = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.03), new THREE.MeshToonMaterial({ color: '#fff4c4', transparent: true, opacity: 0.85 })); tp.position.set(x, y, 0.004); tp.rotation.z = r; rn.add(tp); });
@@ -325,7 +325,7 @@ export function buildStudio({ scene, statics: st }) {
   st.add(M(rbox(0.1, 0.14, 0.03, 0.015), toon('#ffd27a'), X1 - 0.02, 2.02, 0.32, 0, -Math.PI / 2, 0));
   scene.add(scShade); scShade.position.set(X1 - 0.11, 2.02, 0.32);
   const scL = new THREE.PointLight('#ffc98a', 0, 3.2, 1.4); scL.position.set(X1 - 0.3, 2.0, 0.4); scene.add(scL);
-  const scGlow = glow('#ffd9b0', 0.22, 0.2); scGlow.position.set(X1 - 0.13, 2.02, 0.32); scene.add(scGlow);
+  const scGlow = glow('#ffd9b0', 0.22, 0.2); scGlow.name = 'doorGlow'; scGlow.position.set(X1 - 0.13, 2.02, 0.32); scene.add(scGlow);
   // doormat, hooks with tote bag + coat, small mirror
   const mat = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.5), toon('#ffffff', { map: paint(256, 160, (g, w, h) => { rr2(g, 4, 4, w - 8, h - 8, 30); g.fillStyle = '#ffd6e3'; g.fill(); g.lineWidth = 6; g.strokeStyle = '#ff9fb8'; g.stroke(); g.fillStyle = '#e0647a'; g.font = 'bold 44px Arial'; g.textAlign = 'center'; g.fillText('hi :)', 128, 96); }) }));
   mat.rotation.set(-Math.PI / 2, 0, Math.PI / 2); mat.position.set(X1 - 0.5, 0.007, dcz); scene.add(mat);

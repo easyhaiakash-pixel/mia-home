@@ -1,0 +1,112 @@
+<!doctype html><meta charset="utf-8"><title>export rooms to GLB</title>
+<script src="../vendor/mia.js"></script>
+<script type="module">
+// Exports the three.js sets (studio, café) as GLB + a JSON of lights / glows / mood textures, for the Unity version.
+import { createSet } from '../sets.js';
+import { THREE } from '../parts/kit.js';
+import { GLTFExporter } from './GLTFExporter.js';
+
+const OUT = {};
+const b64 = buf => { let s = ''; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); };
+const png = img => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); return c.toDataURL('image/png').split(',')[1]; };
+const v3 = v => [+v.x.toFixed(4), +v.y.toFixed(4), +v.z.toFixed(4)];
+const KEEP_HIDDEN = /^(bill\d|napNoteText|blackCar|carShadow|coins|tipCash|rentNotice|rentPaper|duvetRoll|noodleCup|fridgeBills|adrianCup|napkinNote|cupLift|napHinge|phone|phoneScreen)$/;
+
+async function exportSet(name, baseMood, props) {
+  const set = await createSet(name, { width: 256, height: 256 });
+  const shot = set.shots[0], scene = set.scene;
+  const meta = { set: name, baseMood, moods: {}, glows: [], lights: {}, swaps: [] };
+  // 1. what changes between day and night: textures on meshes, lights
+  const maps = {};
+  for (const m of ['day', 'night']) {
+    set.render({ shot, mood: m, props });
+    maps[m] = new Map(); const L = [];
+    scene.traverse(o => {
+      if (o.isMesh && o.material && !Array.isArray(o.material) && o.material.map) maps[m].set(o, o.material.map);
+      if (o.isLight) { o.updateMatrixWorld(true); const p = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld);
+        const l = { type: o.type, name: o.name, pos: v3(p), color: '#' + o.color.getHexString(), intensity: +o.intensity.toFixed(3) };
+        if (o.isHemisphereLight) l.ground = '#' + o.groundColor.getHexString();
+        if (o.isPointLight) { l.distance = o.distance; l.decay = o.decay; }
+        if (o.isDirectionalLight) { o.target.updateMatrixWorld(true); l.target = v3(new THREE.Vector3().setFromMatrixPosition(o.target.matrixWorld)); l.shadow = o.castShadow; }
+        L.push(l); }
+    });
+    meta.lights[m] = L; meta.moods[m] = { background: '#' + scene.background.getHexString(), look: set.look ? null : null };
+  }
+  let k = 0;
+  for (const [o, mapN] of maps.night) {
+    const mapD = maps.day.get(o);
+    if (mapD && mapD !== mapN) { o.name = (o.name && o.name !== 'static') ? o.name : 'mood' + k++; o.material = o.material.clone(); OUT[`${name}/${o.name}-night.png`] = png(mapN.image); OUT[`${name}/${o.name}-day.png`] = png(mapD.image); meta.swaps.push(o.name); }
+  }
+  set.render({ shot, mood: baseMood, props });
+  // rent notice variants (studio) / note (café)
+  if (name === 'studio') {
+    for (const txt of ['3 DAYS', '2 DAYS', '1 DAY', 'TODAY', 'LAST WARNING']) {
+      set.render({ shot, mood: baseMood, props: { ...props, rentNotice: txt } });
+      let paper; scene.traverse(o => { if (o.name === 'rentPaper') paper = o; });
+      OUT[`${name}/rent-${txt.replace(' ', '_')}.png`] = png(paper.material.map.image);
+    }
+    set.render({ shot, mood: baseMood, props });
+  }
+  // 2. name the props
+  for (const [key, o] of Object.entries(set.objects)) if (o && !o.name) o.name = key;
+  scene.updateMatrixWorld(true);
+  // 3. clean up for export
+  const kill = [];
+  scene.traverse(o => {
+    if (o.isLight || o.isCamera) kill.push(o);
+    else if (o.isSprite) {
+      const p = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld), s = new THREE.Vector3().setFromMatrixScale(o.matrixWorld);
+      let par = o.parent, owner = ''; while (par && !owner) { owner = par.name || ''; par = par.parent; }
+      meta.glows.push({ name: o.name, owner, pos: v3(p), size: +s.x.toFixed(3), color: '#' + o.material.color.getHexString(), opacity: +o.material.opacity.toFixed(3), visible: o.visible });
+      kill.push(o);
+    }
+    else if (o.isMesh && o.material && o.material.isShaderMaterial) {
+      // outline hull: keep, marked with a plain material called OUTLINE (Unity gives it the outline shader)
+      o.material = OUTLINE_MAT;
+    }
+    else if (!o.visible && !KEEP_HIDDEN.test(o.name) && !(o.parent && KEEP_HIDDEN.test(o.parent.name))) kill.push(o);
+  });
+  kill.forEach(o => o.parent && o.parent.remove(o));
+  // instanced meshes → plain meshes (fairy light bulbs)
+  const inst = []; scene.traverse(o => { if (o.isInstancedMesh) inst.push(o); });
+  inst.forEach(im => {
+    const g = new THREE.Group(); g.name = im.name || 'bulbs'; g.position.copy(im.position); g.quaternion.copy(im.quaternion); g.scale.copy(im.scale);
+    const m4 = new THREE.Matrix4(), c = new THREE.Color();
+    for (let i = 0; i < im.count; i++) {
+      im.getMatrixAt(i, m4); const mat = im.material.clone(); if (im.instanceColor) { im.getColorAt(i, c); mat.color.copy(c); }
+      mat.name = (mat.isMeshBasicMaterial ? 'unlit' : 'toon') + '__bulb' + i; mat.userData._named = true;
+      const m = new THREE.Mesh(im.geometry, mat); m.name = 'bulb' + i; m.applyMatrix4(m4); g.add(m);
+    }
+    im.parent.add(g); im.parent.remove(im);
+  });
+  // material names tell Unity which shader to use: U_ unlit, T_ toon, then flags
+  scene.traverse(o => {
+    if (!o.isMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    const out = mats.map(m => {
+      if (m === OUTLINE_MAT) return m;
+      if (m.userData._named) return m;
+      const fl = [m.isMeshBasicMaterial ? 'unlit' : 'toon'];
+      if (m.transparent || m.opacity < 1) fl.push('alpha');
+      if (m.blending === THREE.AdditiveBlending) fl.push('add');
+      if (m.side === THREE.DoubleSide) fl.push('dbl');
+      if (m.alphaTest > 0) fl.push('cut' + Math.round(m.alphaTest * 100));
+      m.name = fl.join('.') + '__' + (m.name || m.uuid.slice(0, 6)); m.userData._named = true; return m;
+    });
+    o.material = Array.isArray(o.material) ? out : out[0];
+  });
+  scene.background = null;
+  const glb = await new GLTFExporter().parseAsync(scene, { binary: true, onlyVisible: false, maxTextureSize: 2048 });
+  OUT[`${name}/${name}.glb`] = b64(glb);
+  // list of nodes (for checking)
+  const names = []; scene.traverse(o => { if (o.name) names.push(o.name); }); meta.nodes = names;
+  OUT[`${name}/${name}.json`] = btoa(unescape(encodeURIComponent(JSON.stringify(meta, null, 1))));
+}
+const OUTLINE_MAT = new THREE.MeshBasicMaterial({ color: '#6b4046', side: THREE.BackSide, name: 'OUTLINE' });
+
+(async () => {
+  await exportSet('studio', 'night', { coinJar: 0.12, deadPlantDroop: 0.35 });
+  await exportSet('cafe', 'day', { cashStack: 10, blackCar: 0, napkinOpen: 0, napkinNote: undefined, adrianCup: 0, tipJar: 0.2 });
+  window.OUT = OUT; window.DONE = true;
+})().catch(e => { console.error('EXPORT FAIL', e.stack || e); window.DONE = true; });
+</script>

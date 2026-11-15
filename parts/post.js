@@ -80,6 +80,12 @@ export class Post {
       }, vertexShader: VS, fragmentShader: COMP_FS, depthTest: false, depthWrite: false, transparent: false,
     });
   }
+  resize(w, h) {
+    this.w = w; this.h = h;
+    this.main.setSize(w, h); this.front.setSize(w, h);
+    [[this.half, 1], [this.halfB, 1], [this.q, 2], [this.qB, 2], [this.e, 3], [this.eB, 3]].forEach(([t, k]) => t.setSize(Math.max(1, w >> k), Math.max(1, h >> k)));
+    this.compM.uniforms.tDepth.value = this.main.depthTexture;
+  }
   pass(mat, target) { this.quad.material = mat; this.r.setRenderTarget(target); this.r.render(this.sc, this.cam); }
   down(src, dst, sw, sh) { this.copyM.uniforms.tSrc.value = src.texture; this.copyM.uniforms.uTexel.value.set(1 / sw, 1 / sh); this.pass(this.copyM, dst); }
   blur(a, b, w, h, k = 1) {

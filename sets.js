@@ -20,7 +20,7 @@ const MIA_HEAD_PX = 320, MIA_BOTTOM_PX = 350;
 export const SET_NAMES = Object.keys(BUILDERS);
 
 export async function createSet(name, opts = {}) {
-  const W = opts.width || 1080, H = opts.height || 1920;
+  let W = opts.width || 1080, H = opts.height || 1920;
   if (!BUILDERS[name]) throw new Error(`createSet: unknown set "${name}" (use ${SET_NAMES.join(' or ')})`);
   const glCanvas = opts.glCanvas || document.createElement('canvas');
   glCanvas.width = W; glCanvas.height = H;
@@ -144,6 +144,26 @@ export async function createSet(name, opts = {}) {
       o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox;
       return [[b.min.x, b.max.y], [b.max.x, b.max.y], [b.max.x, b.min.y], [b.min.x, b.min.y]].map(([x, y]) => project(new THREE.Vector3(x, y, b.max.z).applyMatrix4(o.matrixWorld).toArray()));
     },
+    // ---------- live mode (the interactive site): free camera, any screen size, draws straight to glCanvas ----------
+    setSize(w, h) {
+      W = Math.max(2, Math.round(w)); H = Math.max(2, Math.round(h));
+      renderer.setSize(W, H, false); post.resize(W, H);
+      outlineUniforms.uRes.value.set(W, H); outlineUniforms.uPx.value = Math.max(1.6, 2.6 * Math.min(W, H) / 1080);
+      camera.aspect = W / H; camera.updateProjectionMatrix();
+    },
+    // view = { p:[x,y,z], at:[x,y,z], fov }, o = { t, mood, props, focusDist, blur }
+    renderView(view, o = {}) {
+      const mood = o.mood === 'day' ? 'day' : 'night';
+      camera.position.fromArray(view.p); camera.fov = view.fov || 50; camera.aspect = W / H; camera.up.set(0, 1, 0);
+      camera.lookAt(new THREE.Vector3().fromArray(view.at)); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+      if (mood !== lastMood) { set.setMood(mood); lastMood = mood; }
+      set.update(Object.assign({}, set.defaults || {}, o.props || {}), o.t || 0, mood, null);
+      if (o.beforeRender) o.beforeRender(camera);
+      scene.updateMatrixWorld(true);
+      camera.layers.set(0); renderer.shadowMap.needsUpdate = true;
+      post.render(scene, camera, { focusDist: o.focusDist || 3, blur: o.blur ?? 0.5, look: set.look(mood, o.props || {}) });
+    },
+    walk: set.walk, hotspots: set.hotspots,
     info: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures }),
     dispose() {
       post.dispose();
