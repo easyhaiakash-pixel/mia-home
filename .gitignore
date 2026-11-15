@@ -1,0 +1,5 @@
+.DS_Store
+node_modules/
+.vercel/
+checks/snap*.png
+checks/same-*.png

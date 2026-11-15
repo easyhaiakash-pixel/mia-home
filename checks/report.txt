@@ -1,0 +1,25 @@
+01-studio-wide-night: 76 ms
+02-studio-wide-day: 28 ms
+03-studio-bed-night: 24 ms
+04-studio-bed-day: 26 ms
+05-studio-phone-night: 23 ms
+06-studio-phone-day: 20 ms
+07-studio-door-night: 23 ms
+08-studio-door-day: 21 ms
+09-studio-window-night: 27 ms
+10-studio-window-day: 19 ms
+11-studio-fridge-night: 18 ms
+12-studio-fridge-day: 18 ms
+13-cafe-wide-night: 23 ms
+14-cafe-wide-day: 20 ms
+15-cafe-counter-night: 23 ms
+16-cafe-counter-day: 24 ms
+17-cafe-corner-night: 17 ms
+18-cafe-corner-day: 17 ms
+19-cafe-table-close-night: 17 ms
+20-cafe-table-close-day: 17 ms
+21-cafe-window-street-night: 15 ms
+22-cafe-window-street-day: 15 ms
+same input twice gives the same picture: YES
+studio-wide: median 31 ms, worst 65 ms
+cafe-wide: median 32 ms, worst 46 ms

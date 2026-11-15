@@ -1,0 +1,104 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Mia's sets: viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #2b2230; font: 14px/1.3 "Arial Rounded MT Bold", Arial, sans-serif; color: #fff4f0; }
+  #wrap { display: flex; height: 100%; }
+  #side { width: 290px; padding: 14px; box-sizing: border-box; overflow-y: auto; background: #3a2c3c; }
+  #stage { flex: 1; display: flex; align-items: center; justify-content: center; }
+  #out { height: 96vh; aspect-ratio: 9 / 16; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.5); background: #000; }
+  h1 { font-size: 18px; margin: 0 0 4px; } h2 { font-size: 13px; margin: 14px 0 6px; color: #ffc2d1; text-transform: uppercase; letter-spacing: .05em; }
+  button { margin: 2px; padding: 6px 9px; border: 2px solid #6b4046; border-radius: 10px; background: #fff1ec; color: #6b4046; font: inherit; cursor: pointer; }
+  button.on { background: #ff8fb4; color: #fff; }
+  select, label { font: inherit; } #msg { margin-top: 10px; font-size: 12px; color: #d9c7cf; white-space: pre-wrap; }
+</style></head>
+<body><div id="wrap">
+<div id="side">
+  <h1>Mia's sets</h1><div style="font-size:12px;color:#d9c7cf">Her Story, Your Choice</div>
+  <h2>Set</h2><div id="sets"></div>
+  <h2>Shot</h2><div id="shots"></div>
+  <h2>Light</h2><div><button data-mood="day">☀️ Day</button><button data-mood="night">🌙 Night</button></div>
+  <h2>Options</h2>
+  <div><button id="play">▶ Play shot (0–3 s)</button></div>
+  <div><button id="mia" class="on">Mia overlay</button><button id="blur" class="on">Background blur</button></div>
+  <div><label>Mia's face <select id="face"><option>neutral</option><option>happy</option><option>sad</option><option>teary</option><option>angry</option><option>shock</option></select></label></div>
+  <div><label>t = <input id="t" type="range" min="0" max="3" step="0.05" value="0" style="width:150px"> <span id="tv">0.00</span> s</label></div>
+  <div id="msg"></div>
+</div>
+<div id="stage"><canvas id="out" width="1080" height="1920"></canvas></div>
+</div>
+<script src="vendor/mia.js"></script>
+<script type="module">
+import { createSet, SET_NAMES } from './sets.js';
+const out = document.getElementById('out'), g = out.getContext('2d');
+const cache = {};
+const S = { set: 'studio', shot: null, mood: 'night', t: 0, mia: true, blur: true, face: 'neutral' };
+
+// ---- sample screens for the phone / napkin (films draw their own; these are just for checking) ----
+function demoScreens() {
+  const mk = (w, h, f) => { const c = document.createElement('canvas'); c.width = w; c.height = h; f(c.getContext('2d'), w, h); return c; };
+  const bank = mk(320, 680, (g, w, h) => {
+    g.fillStyle = '#fff7f3'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#ff8fb4'; g.fillRect(0, 0, w, 120); g.fillStyle = '#fff'; g.font = 'bold 30px Arial'; g.textAlign = 'center'; g.fillText('My Bank', w / 2, 74);
+    g.fillStyle = '#9a7a86'; g.font = '24px Arial'; g.fillText('Balance', w / 2, 220);
+    g.fillStyle = '#e0475f'; g.font = 'bold 76px Arial'; g.fillText('$12.43', w / 2, 310);
+    [['Rent', '-$0.00'], ['Noodles x12', '-$9.60'], ['Bus pass', '-$45.00']].forEach(([a, b], i) => { g.fillStyle = '#fff'; g.beginPath(); g.roundRect(24, 380 + i * 82, w - 48, 66, 14); g.fill(); g.fillStyle = '#6b4046'; g.font = '22px Arial'; g.textAlign = 'left'; g.fillText(a, 44, 421 + i * 82); g.textAlign = 'right'; g.fillText(b, w - 44, 421 + i * 82); });
+  });
+  const note = mk(400, 300, (g, w, h) => {
+    g.fillStyle = '#fffdf6'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(200,170,150,0.35)'; g.lineWidth = 2; for (let x = 0; x < w; x += 25) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+    g.fillStyle = '#2f2f3f'; g.font = 'italic 42px "Snell Roundhand", "Segoe Script", cursive'; g.textAlign = 'center';
+    g.fillText('Same time', w / 2, 110); g.fillText('tomorrow.', w / 2, 168); g.font = 'italic 40px "Snell Roundhand", cursive'; g.fillText('— A', w / 2 + 70, 240);
+  });
+  return { bank, note };
+}
+window.DEMO = demoScreens();
+
+async function getSet(name) { return cache[name] ||= await createSet(name, { width: 1080, height: 1920 }); }
+
+// draw one picture: the set, Mia, then the things in front of her
+async function draw(o = {}) {
+  const set = await getSet(o.set || S.set);
+  const shot = o.shot || S.shot || set.shots[0];
+  const t0 = performance.now();
+  set.render({ shot, t: o.t ?? S.t, mood: o.mood || S.mood, focus: o.focus || (S.blur ? 'subject' : 'all'), props: o.props || {} });
+  set.canvas.getContext('2d').getImageData(0, 0, 1, 1);
+  const ms = performance.now() - t0;
+  g.clearRect(0, 0, 1080, 1920); g.drawImage(set.canvas, 0, 0);
+  const sp = set.subjectSpot(shot, o.t ?? S.t);
+  if ((o.mia ?? S.mia) && sp && window.drawMia) window.drawMia(g, sp.x, sp.y, sp.scale, { mood: o.face || S.face, tear: (o.face || S.face) === 'teary', top: o.top });
+  g.drawImage(set.front, 0, 0);
+  return { ms, spot: sp, shot, info: set.info() };
+}
+window.HS = { draw, getSet, shots: async n => (await getSet(n)).shots, SET_NAMES, png: () => out.toDataURL('image/png') };
+
+// ---- UI ----
+const msg = document.getElementById('msg');
+async function refresh() {
+  const set = await getSet(S.set);
+  if (!S.shot || !set.shots.includes(S.shot)) S.shot = set.shots[0];
+  document.getElementById('sets').innerHTML = SET_NAMES.map(n => `<button data-set="${n}" class="${n === S.set ? 'on' : ''}">${n}</button>`).join('');
+  document.getElementById('shots').innerHTML = set.shots.map(n => `<button data-shot="${n}" class="${n === S.shot ? 'on' : ''}">${n}</button>`).join('');
+  document.querySelectorAll('[data-mood]').forEach(b => b.classList.toggle('on', b.dataset.mood === S.mood));
+  document.getElementById('mia').classList.toggle('on', S.mia); document.getElementById('blur').classList.toggle('on', S.blur);
+  const props = S.shot === 'studio-phone' ? { phoneScreen: DEMO.bank } : S.shot === 'cafe-table-close' ? { napkinOpen: 1, napkinNote: DEMO.note, cashStack: 10 } : {};
+  const r = await draw({ props });
+  msg.textContent = `${S.set} / ${S.shot} / ${S.mood}  t=${S.t.toFixed(2)} s\nframe: ${r.ms.toFixed(0)} ms  draw calls: ${r.info.calls}\n` + (r.spot ? `Mia: x ${r.spot.x.toFixed(0)}, y ${r.spot.y.toFixed(0)}, scale ${r.spot.scale.toFixed(2)}` : 'no Mia spot');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.set) { S.set = b.dataset.set; S.shot = null; }
+  if (b.dataset.shot) S.shot = b.dataset.shot;
+  if (b.dataset.mood) S.mood = b.dataset.mood;
+  if (b.id === 'mia') S.mia = !S.mia;
+  if (b.id === 'blur') S.blur = !S.blur;
+  if (b.id === 'play') { const t0 = performance.now(); const step = async () => { S.t = Math.min(3, (performance.now() - t0) / 1000); tIn.value = S.t; tv.textContent = S.t.toFixed(2); await refresh(); if (S.t < 3) requestAnimationFrame(step); }; step(); return; }
+  refresh();
+});
+const tIn = document.getElementById('t'), tv = document.getElementById('tv');
+tIn.addEventListener('input', () => { S.t = +tIn.value; tv.textContent = S.t.toFixed(2); refresh(); });
+document.getElementById('face').addEventListener('change', e => { S.face = e.target.value; refresh(); });
+if (!navigator.webdriver) refresh();
+window.READY = true;
+</script>
+</body></html>
